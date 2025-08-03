@@ -1,38 +1,101 @@
-import { z } from "zod";
+import { Schema } from "@effect/schema";
 
-import { UserSchema } from "~/types/user";
+import { UserSchema } from "./user";
 
 /**
- * Domain type definition for Post entity
- * This serves as the single source of truth for Post types across the application
- * 
- * Use cases:
- * 1. Type inference for TypeScript throughout the app
- * 2. Runtime validation for API inputs/outputs
- * 3. Form validation on the frontend
- * 4. Documentation of expected data structure
- * 
- * Example usage:
- * - API validation: PostSchema.parse(requestBody)
- * - Type usage: function createPost(post: Post) { ... }
- * - Form validation: useForm<Post>({ resolver: zodResolver(PostSchema) })
+ * Post Schema using Effect's Schema
+ * Provides runtime validation, encoding/decoding, and type inference
  */
-export const PostSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+export const PostSchema = Schema.Struct({
+  id: Schema.Number,
+  name: Schema.String.pipe(
+    Schema.minLength(1, { message: () => "Post name cannot be empty" }),
+    Schema.maxLength(255, {
+      message: () => "Post name too long (max 255 characters)",
+    })
+  ),
+  createdAt: Schema.instanceOf(Date),
+  updatedAt: Schema.instanceOf(Date),
 });
 
 /**
- * Extended Post schema that includes user relation
- * Demonstrates how to compose schemas for complex types
- * 
- * Use case: When fetching posts with their authors
+ * Post with User relation schema
+ * Demonstrates schema composition with Effect Schema
  */
-export const PostWithUserSchema = PostSchema.extend({
+export const PostWithUserSchema = Schema.Struct({
+  ...PostSchema.fields,
   createdBy: UserSchema,
 });
 
-export type Post = z.infer<typeof PostSchema>;
-export type PostWithUser = z.infer<typeof PostWithUserSchema>;
+/**
+ * Type inference from schemas
+ */
+export type Post = Schema.Schema.Type<typeof PostSchema>;
+export type PostWithUser = Schema.Schema.Type<typeof PostWithUserSchema>;
+
+/**
+ * Encoded types (for serialization)
+ */
+export type PostEncoded = Schema.Schema.Encoded<typeof PostSchema>;
+export type PostWithUserEncoded = Schema.Schema.Encoded<
+  typeof PostWithUserSchema
+>;
+
+/**
+ * Schema for creating a new post
+ */
+export const CreatePostSchema = Schema.Struct({
+  name: PostSchema.fields.name,
+  createdById: Schema.String,
+});
+
+export type CreatePost = Schema.Schema.Type<typeof CreatePostSchema>;
+
+/**
+ * Schema for updating a post
+ */
+export const UpdatePostSchema = Schema.partial(
+  Schema.Struct({
+    name: PostSchema.fields.name,
+  })
+);
+
+export type UpdatePost = Schema.Schema.Type<typeof UpdatePostSchema>;
+
+/**
+ * Schema for post filters/queries
+ */
+export const PostFilterSchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  createdById: Schema.optional(Schema.String),
+  createdAfter: Schema.optional(Schema.instanceOf(Date)),
+  createdBefore: Schema.optional(Schema.instanceOf(Date)),
+  limit: Schema.optional(
+    Schema.Number.pipe(
+      Schema.positive({ message: () => "Limit must be positive" }),
+      Schema.lessThanOrEqualTo(100, {
+        message: () => "Limit cannot exceed 100",
+      })
+    )
+  ),
+  offset: Schema.optional(
+    Schema.Number.pipe(
+      Schema.nonNegative({ message: () => "Offset cannot be negative" })
+    )
+  ),
+});
+
+export type PostFilter = Schema.Schema.Type<typeof PostFilterSchema>;
+
+/**
+ * Utility functions for validation and parsing
+ */
+export const parsePost = Schema.decodeUnknownSync(PostSchema);
+export const parsePostSafe = Schema.decodeUnknown(PostSchema);
+export const encodePost = Schema.encodeSync(PostSchema);
+export const encodePostSafe = Schema.encode(PostSchema);
+
+export const parsePostWithUser = Schema.decodeUnknownSync(PostWithUserSchema);
+export const parsePostWithUserSafe = Schema.decodeUnknown(PostWithUserSchema);
+export const encodePostWithUser = Schema.encodeSync(PostWithUserSchema);
+export const encodePostWithUserSafe = Schema.encode(PostWithUserSchema);

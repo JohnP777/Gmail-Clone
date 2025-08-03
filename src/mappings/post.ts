@@ -1,22 +1,20 @@
 import type { Post, PostWithUser } from "~/types/post";
+import { Schema } from "@effect/schema";
 import { Prisma } from "@prisma/client";
+import { Effect, pipe } from "effect";
 
-import { PrismaUserToUser, UserQuery } from "./user";
+import { ValidationError } from "~/types/errors";
+import { PostSchema, PostWithUserSchema } from "~/types/post";
+
+import { PrismaUserToUser, PrismaUserToUserSync, UserQuery } from "./user";
 
 /**
  * Prisma query configuration for basic Post fetching
- * Defines what fields to select/include when querying posts
- * 
- * Use case: Ensures consistent field selection across all post queries
  */
 export const PostQuery = Prisma.validator<Prisma.PostDefaultArgs>()({});
 
 /**
  * Prisma query configuration for Post with User relation
- * Automatically includes the related user data
- * 
- * Use case: When you need post data along with author information
- * Example: db.post.findMany(PostWithUserQuery)
  */
 export const PostWithUserQuery = Prisma.validator<Prisma.PostDefaultArgs>()({
   include: {
@@ -25,18 +23,36 @@ export const PostWithUserQuery = Prisma.validator<Prisma.PostDefaultArgs>()({
 });
 
 /**
- * Maps Prisma Post type to domain Post type
- * This creates a boundary between database schema and business logic
- * 
- * Benefits:
- * - Database schema can change without affecting domain types
- * - Explicit field mapping prevents accidental data exposure
- * - Easy to add computed fields or transformations
- * 
- * Use case: Convert database query results to domain types
- * Example: const domainPost = PrismaPostToPost(prismaPost)
+ * Maps Prisma Post to domain Post type using Effect
+ * Includes validation to ensure data integrity
  */
 export const PrismaPostToPost = (
+  post: Prisma.PostGetPayload<typeof PostQuery>
+): Effect.Effect<Post, ValidationError> => {
+  const postData = {
+    id: post.id,
+    name: post.name,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt,
+  };
+
+  return pipe(
+    Schema.decodeUnknown(PostSchema)(postData),
+    Effect.mapError(
+      (error) =>
+        new ValidationError({
+          field: "post",
+          reason: String(error),
+        })
+    )
+  );
+};
+
+/**
+ * Sync version for backward compatibility
+ * Note: This will throw if validation fails
+ */
+export const PrismaPostToPostSync = (
   post: Prisma.PostGetPayload<typeof PostQuery>
 ): Post => {
   return {
@@ -48,17 +64,71 @@ export const PrismaPostToPost = (
 };
 
 /**
- * Maps Prisma Post with relations to domain PostWithUser type
- * Demonstrates how to handle nested relations in mappings
- * 
- * Use case: Convert complex query results with relations
- * Example: posts.map(PrismaPostWithUserToPostWithUser)
+ * Maps Prisma Post with relations to domain PostWithUser type using Effect
+ * Demonstrates handling nested relations with validation
  */
 export const PrismaPostWithUserToPostWithUser = (
   post: Prisma.PostGetPayload<typeof PostWithUserQuery>
+): Effect.Effect<PostWithUser, ValidationError> => {
+  return pipe(
+    Effect.all({
+      post: PrismaPostToPost(post),
+      user: PrismaUserToUser(post.createdBy),
+    }),
+    Effect.map(({ post, user }) => ({
+      ...post,
+      createdBy: user,
+    })),
+    Effect.flatMap((data) =>
+      pipe(
+        Schema.decodeUnknown(PostWithUserSchema)(data),
+        Effect.mapError(
+          (error) =>
+            new ValidationError({
+              field: "postWithUser",
+              reason: String(error),
+            })
+        )
+      )
+    )
+  );
+};
+
+/**
+ * Sync version for backward compatibility
+ * Note: This will throw if validation fails
+ */
+export const PrismaPostWithUserToPostWithUserSync = (
+  post: Prisma.PostGetPayload<typeof PostWithUserQuery>
 ): PostWithUser => {
   return {
-    ...PrismaPostToPost(post),
-    createdBy: PrismaUserToUser(post.createdBy),
+    ...PrismaPostToPostSync(post),
+    createdBy: PrismaUserToUserSync(post.createdBy),
   };
+};
+
+/**
+ * Maps domain Post to Prisma create input
+ */
+export const PostToPrismaCreate = (
+  post: Omit<Post, "id" | "createdAt" | "updatedAt">,
+  createdById: string
+): Prisma.PostCreateInput => ({
+  name: post.name,
+  createdBy: {
+    connect: { id: createdById },
+  },
+});
+
+/**
+ * Maps domain Post to Prisma update input
+ */
+export const PostToPrismaUpdate = (
+  post: Partial<Omit<Post, "id" | "createdAt" | "updatedAt">>
+) => {
+  const update: Prisma.PostUpdateInput = {};
+
+  if (post.name !== undefined) update.name = post.name;
+
+  return update;
 };

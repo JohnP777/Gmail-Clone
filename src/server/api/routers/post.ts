@@ -1,3 +1,5 @@
+import { TRPCError } from "@trpc/server";
+import { Effect } from "effect";
 import { z } from "zod";
 
 import {
@@ -5,7 +7,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { CreatePostInputSchema } from "~/services/post/service";
+import { PostService } from "~/services";
 
 export const postRouter = createTRPCRouter({
   hello: publicProcedure
@@ -17,33 +19,127 @@ export const postRouter = createTRPCRouter({
     }),
 
   create: protectedProcedure
-    .input(CreatePostInputSchema.pick({ name: true }))
+    .input(z.object({ name: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.postService.createPost({
-        name: input.name,
-        createdBy: {
-          id: ctx.session.user.id,
-          name: ctx.session.user.name ?? "",
-          email: ctx.session.user.email ?? "",
-          image: ctx.session.user.image ?? "",
-        },
-      });
+      const createPost = Effect.gen(function* () {
+        const postService = yield* PostService;
+
+        return yield* postService.createPost({
+          name: input.name,
+          createdBy: {
+            id: ctx.session.user.id,
+          },
+        });
+      }).pipe(
+        Effect.catchTags({
+          DatabaseError: (error) => {
+            return Effect.fail(
+              new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: error.message,
+              })
+            );
+          },
+          ValidationError: (error) => {
+            return Effect.fail(
+              new TRPCError({
+                code: "BAD_REQUEST",
+                message: error.message,
+              })
+            );
+          },
+        })
+      );
+
+      return ctx.runtime.runPromise(createPost);
     }),
 
   latest: protectedProcedure.query(async ({ ctx }) => {
-    const post = await ctx.postService.getLatestPost();
+    const latestPost = Effect.gen(function* () {
+      const postService = yield* PostService;
 
-    return post;
+      return yield* postService.getLatestPost();
+    }).pipe(
+      Effect.catchTags({
+        DatabaseError: () => {
+          return Effect.fail(
+            new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+            })
+          );
+        },
+        ValidationError: () => {
+          return Effect.fail(
+            new TRPCError({
+              code: "BAD_REQUEST",
+            })
+          );
+        },
+      })
+    );
+    return ctx.runtime.runPromise(latestPost);
   }),
 
   all: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.postService.getAllPosts();
+    const allPosts = Effect.gen(function* () {
+      const postService = yield* PostService;
+
+      return yield* postService.getAllPosts();
+    }).pipe(
+      Effect.catchTags({
+        DatabaseError: () => {
+          return Effect.fail(
+            new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+            })
+          );
+        },
+        ValidationError: () => {
+          return Effect.fail(
+            new TRPCError({
+              code: "BAD_REQUEST",
+            })
+          );
+        },
+      })
+    );
+    return ctx.runtime.runPromise(allPosts);
   }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      return ctx.postService.getPost(input.id);
+      const getPost = Effect.gen(function* () {
+        const postService = yield* PostService;
+        
+        return yield* postService.getPost(input.id);
+      }).pipe(
+        Effect.catchTags({
+          DatabaseError: () => {
+            return Effect.fail(
+              new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+              })
+            );
+          },
+          ValidationError: () => {
+            return Effect.fail(
+              new TRPCError({
+                code: "BAD_REQUEST",
+              })
+            );
+          },
+          NotFoundError: () => {
+            return Effect.fail(
+              new TRPCError({
+                code: "NOT_FOUND",
+              })
+            );
+          },
+        })
+      );
+
+      return ctx.runtime.runPromise(getPost);
     }),
 
   getSecretMessage: protectedProcedure.query(() => {

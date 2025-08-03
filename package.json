@@ -22,6 +22,8 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
+    "@effect/platform": "^0.90.0",
+    "@effect/schema": "^0.75.5",
     "@prisma/client": "^6.12.0",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-separator": "^1.1.7",
@@ -35,6 +37,7 @@
     "@trpc/tanstack-react-query": "^11.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "effect": "^3.17.5",
     "lucide-react": "^0.525.0",
     "next": "^15.4.2",
     "next-auth": "5.0.0-beta.25",

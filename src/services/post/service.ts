@@ -1,135 +1,308 @@
-import type { PrismaClient } from "@prisma/client";
-import type { Post, PostWithUser } from "~/types/post";
-import { TRPCError } from "@trpc/server";
-import { type z } from "zod";
+import { Schema } from "@effect/schema";
+import { Effect, pipe } from "effect";
 
 import {
   PostWithUserQuery,
   PrismaPostToPost,
   PrismaPostWithUserToPostWithUser,
 } from "~/mappings/post";
-import { PostWithUserSchema } from "~/types/post";
+import { Database } from "~/services/database/service";
+import { DatabaseError, NotFoundError, ValidationError } from "~/types/errors";
 
 /**
- * Input validation schema for creating posts
- * Derives from domain schema to ensure consistency
- *
- * Use case: Validate input data before processing
+ * Input schema for creating posts using Effect Schema
+ * Provides runtime validation and type inference
  */
-export const CreatePostInputSchema = PostWithUserSchema.pick({
-  name: true,
-  createdBy: true,
+export const CreatePostInput = Schema.Struct({
+  name: Schema.String.pipe(
+    Schema.minLength(1, { message: () => "Post name cannot be empty" })
+  ),
+  createdBy: Schema.Struct({
+    id: Schema.String,
+  }),
 });
-type CreatePostInput = z.infer<typeof CreatePostInputSchema>;
+
+export type CreatePostInput = Schema.Schema.Type<typeof CreatePostInput>;
 
 /**
- * PostService interface defines the contract for post-related operations
- * This abstraction enables:
- * - Easy mocking for tests
- * - Multiple implementations (e.g., different databases)
- * - Clear API documentation
+ * PostService provides all post-related operations with type-safe error handling.
  *
- * Use case: Define what operations are available for posts
+ * Benefits of using Effect.Service:
+ * - Automatic dependency injection (Database is injected automatically)
+ * - Type-safe error handling (all errors are explicit in return types)
+ * - Testability (can be easily mocked using PostService.Test)
+ * - Composability (can be combined with other services in layers)
+ *
+ * @example
+ * // In TRPC router with effect-trpc-bridge
+ * ctx.postService.createPost(input) // Returns Promise<Post>
+ *
+ * // In Effect programs
+ * Effect.gen(function* () {
+ *   const service = yield* PostService
+ *   const post = yield* service.createPost(input)
+ * })
  */
-export interface PostService {
-  createPost(post: CreatePostInput): Promise<Post>;
-  getLatestPost(): Promise<PostWithUser | null>;
-  getPost(id: string): Promise<PostWithUser>;
-  getAllPosts(): Promise<Post[]>;
-}
+export class PostService extends Effect.Service<PostService>()("PostService", {
+  effect: Effect.gen(function* () {
+    const db = yield* Database;
+
+    return {
+      /**
+       * Creates a new post with validation
+       * @throws {ValidationError} If input validation fails
+       * @throws {DatabaseError} If database operation fails
+       */
+      createPost: (input: CreatePostInput) =>
+        pipe(
+          Schema.decodeUnknown(CreatePostInput)(input),
+          Effect.mapError(
+            (error) =>
+              new ValidationError({
+                field: "createPostInput",
+                reason: String(error),
+              })
+          ),
+          Effect.flatMap((validInput) =>
+            Effect.tryPromise({
+              try: () =>
+                db.post.create({
+                  data: {
+                    name: validInput.name,
+                    createdBy: { connect: { id: validInput.createdBy.id } },
+                  },
+                }),
+              catch: (error) =>
+                new DatabaseError({
+                  operation: "createPost",
+                  reason: String(error),
+                }),
+            })
+          ),
+          Effect.flatMap(PrismaPostToPost)
+        ),
+
+      /**
+       * Retrieves the most recent post with user information
+       * @returns Post with user or null if no posts exist
+       * @throws {DatabaseError} If database query fails
+       */
+      getLatestPost: () =>
+        pipe(
+          Effect.tryPromise({
+            try: () =>
+              db.post.findFirst({
+                orderBy: { createdAt: "desc" },
+                include: PostWithUserQuery.include,
+              }),
+            catch: (error) =>
+              new DatabaseError({
+                operation: "getLatestPost",
+                reason: String(error),
+              }),
+          }),
+          Effect.flatMap((post) =>
+            post ? PrismaPostWithUserToPostWithUser(post) : Effect.succeed(null)
+          )
+        ),
+
+      /**
+       * Retrieves a specific post by ID
+       * @throws {NotFoundError} If post doesn't exist
+       * @throws {DatabaseError} If database query fails
+       * @throws {ValidationError} If ID format is invalid
+       */
+      getPost: (id: string) =>
+        pipe(
+          Effect.tryPromise({
+            try: () =>
+              db.post.findUnique({
+                where: { id: Number(id) },
+                include: PostWithUserQuery.include,
+              }),
+            catch: (error) =>
+              new DatabaseError({
+                operation: "getPost",
+                reason: String(error),
+              }),
+          }),
+          Effect.flatMap((post) =>
+            post
+              ? PrismaPostWithUserToPostWithUser(post)
+              : Effect.fail<NotFoundError | ValidationError | DatabaseError>(
+                  new NotFoundError({
+                    resource: "Post",
+                    id,
+                  })
+                )
+          )
+        ),
+
+      /**
+       * Retrieves all posts ordered by creation date
+       * @throws {DatabaseError} If database query fails
+       * @throws {ValidationError} If data transformation fails
+       */
+      getAllPosts: () =>
+        pipe(
+          Effect.tryPromise({
+            try: () =>
+              db.post.findMany({
+                orderBy: { createdAt: "desc" },
+              }),
+            catch: (error) =>
+              new DatabaseError({
+                operation: "getAllPosts",
+                reason: String(error),
+              }),
+          }),
+          Effect.flatMap((posts) => Effect.all(posts.map(PrismaPostToPost)))
+        ),
+    };
+  }),
+  dependencies: [Database.Live],
+}) {}
 
 /**
- * Concrete implementation of PostService using Prisma
- * Demonstrates dependency injection pattern
- *
- * Benefits:
- * - Database client is injected, not imported
- * - Easy to test with mock database
- * - Can swap database implementations
- *
- * Use cases:
- * - Production: Inject real PrismaClient
- * - Testing: Inject mock PrismaClient
- * - Different environments can use different configs
+ * PostService interface using Effect's Context.Tag
+ * This defines the contract for all post-related operations
+ * Each method returns an Effect with typed errors
  */
-export class PostServiceImpl implements PostService {
-  constructor(private readonly db: PrismaClient) {}
+// export class PostService extends Context.Tag("PostService")<
+//   PostService,
+//   {
+//     readonly createPost: (
+//       input: CreatePostInput
+//     ) => Effect.Effect<Post, ValidationError | DatabaseError>;
 
-  /**
-   * Creates a new post with author relation
-   * Shows how to handle relations in Prisma
-   */
-  async createPost(input: CreatePostInput): Promise<Post> {
-    const post = await this.db.post.create({
-      data: {
-        name: input.name,
-        createdBy: { connect: { id: input.createdBy.id } },
-      },
-    });
+//     readonly getLatestPost: () => Effect.Effect<
+//       PostWithUser | null,
+//       DatabaseError | ValidationError
+//     >;
 
-    return PrismaPostToPost(post);
-  }
+//     readonly getPost: (
+//       id: string
+//     ) => Effect.Effect<
+//       PostWithUser,
+//       NotFoundError | DatabaseError | ValidationError
+//     >;
 
-  /**
-   * Fetches the most recent post with author details
-   * Demonstrates using predefined queries and mappings
-   */
-  async getLatestPost(): Promise<PostWithUser | null> {
-    const post = await this.db.post.findFirst({
-      orderBy: { createdAt: "desc" },
-      include: PostWithUserQuery.include,
-    });
+//     readonly getAllPosts: () => Effect.Effect<
+//       Post[],
+//       DatabaseError | ValidationError
+//     >;
+//   }
+// >() {
+//   /**
+//    * Live implementation of PostService
+//    * Uses the Database service as a dependency
+//    */
+//   static readonly Live = Layer.effect(
+//     PostService,
+//     Effect.gen(function* () {
+//       const db = yield* Database;
 
-    if (!post) {
-      return null;
-    }
+//       return {
+//         createPost: (input: CreatePostInput) =>
+//           pipe(
+//             // Validate input using Effect Schema
+//             Schema.decodeUnknown(CreatePostInput)(input),
+//             Effect.mapError(
+//               (error) =>
+//                 new ValidationError({
+//                   field: "createPostInput",
+//                   reason: String(error),
+//                 })
+//             ),
+//             Effect.flatMap((validInput) =>
+//               Effect.tryPromise({
+//                 try: () =>
+//                   db.post.create({
+//                     data: {
+//                       name: validInput.name,
+//                       createdBy: { connect: { id: validInput.createdBy.id } },
+//                     },
+//                   }),
+//                 catch: (error) =>
+//                   new DatabaseError({
+//                     operation: "createPost",
+//                     reason: String(error),
+//                   }),
+//               })
+//             ),
+//             Effect.flatMap(PrismaPostToPost)
+//           ),
 
-    return PrismaPostWithUserToPostWithUser(post);
-  }
+//         getLatestPost: () =>
+//           pipe(
+//             Effect.tryPromise({
+//               try: () =>
+//                 db.post.findFirst({
+//                   orderBy: { createdAt: "desc" },
+//                   include: PostWithUserQuery.include,
+//                 }),
+//               catch: (error) =>
+//                 new DatabaseError({
+//                   operation: "getLatestPost",
+//                   reason: String(error),
+//                 }),
+//             }),
+//             Effect.flatMap((post) =>
+//               post
+//                 ? PrismaPostWithUserToPostWithUser(post)
+//                 : Effect.succeed(null)
+//             )
+//           ),
 
-  /**
-   * Fetches a single post by ID
-   * Shows error handling with findUnique and manually throwing TRPCError
-   */
-  async getPost(id: string): Promise<PostWithUser> {
-    const post = await this.db.post.findUnique({
-      where: { id: Number(id) },
-      include: PostWithUserQuery.include,
-    });
+//         getPost: (id: string) =>
+//           pipe(
+//             Effect.tryPromise({
+//               try: () =>
+//                 db.post.findUnique({
+//                   where: { id: Number(id) },
+//                   include: PostWithUserQuery.include,
+//                 }),
+//               catch: (error) =>
+//                 new DatabaseError({
+//                   operation: "getPost",
+//                   reason: String(error),
+//                 }),
+//             }),
+//             Effect.flatMap((post) =>
+//               post
+//                 ? PrismaPostWithUserToPostWithUser(post)
+//                 : Effect.fail<NotFoundError | ValidationError | DatabaseError>(
+//                     new NotFoundError({
+//                       resource: "Post",
+//                       id,
+//                     })
+//                   )
+//             )
+//           ),
 
-    if (!post) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-      });
-    }
+//         getAllPosts: () =>
+//           pipe(
+//             Effect.tryPromise({
+//               try: () =>
+//                 db.post.findMany({
+//                   orderBy: { createdAt: "desc" },
+//                 }),
+//               catch: (error) =>
+//                 new DatabaseError({
+//                   operation: "getAllPosts",
+//                   reason: String(error),
+//                 }),
+//             }),
+//             Effect.flatMap((posts) => Effect.all(posts.map(PrismaPostToPost)))
+//           ),
+//       };
+//     })
+//   ).pipe(Layer.provide(Database.Live));
 
-    return PrismaPostWithUserToPostWithUser(post);
-  }
-
-  /**
-   * Fetches all posts ordered by creation date
-   * Demonstrates batch mapping of database results
-   */
-  async getAllPosts(): Promise<Post[]> {
-    const posts = await this.db.post.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-
-    return posts.map(PrismaPostToPost);
-  }
-}
-
-/**
- * Factory function for creating PostService instances
- * This is the dependency injection entry point
- *
- * Use case:
- * const postService = getPostService(prismaClient);
- *
- * Testing example:
- * const mockDb = createMockPrismaClient();
- * const testService = getPostService(mockDb);
- */
-export const getPostService = (db: PrismaClient): PostService => {
-  return new PostServiceImpl(db);
-};
+//   /**
+//    * Test implementation that can be configured with mock data
+//    */
+//   static readonly Test = (
+//     mockImplementation: Context.Tag.Service<PostService>
+//   ) => Layer.succeed(PostService, mockImplementation);
+// }

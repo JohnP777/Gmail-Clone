@@ -68,14 +68,31 @@ The template includes a custom `Await` component that implements React's streami
 - **SEO friendly**: Content is server-rendered
 - **Resilient**: Errors in one component don't break the entire page
 
-#### 6. Dependency Injection Pattern (Backend Services)
-Backend services use dependency injection for better testability and flexibility. Services are injected with their dependencies (like database clients) rather than importing them directly.
+#### 6. Effect.ts for Backend Services
+Backend services are built using [Effect.ts](https://effect.website), a powerful TypeScript library for building type-safe, composable, and testable applications. Effect provides:
+
+**Core Features:**
+- **Type-safe error handling**: All errors are tracked in the type system
+- **Dependency injection**: Compile-time safe dependency management with Context
+- **Resource management**: Automatic cleanup of resources (database connections, etc.)
+- **Composability**: Services can be easily composed using layers
 
 **Benefits:**
-- **Testability**: Easy to mock dependencies for unit testing
-- **Flexibility**: Swap implementations without changing business logic
-- **Decoupling**: Services don't depend on concrete implementations
-- **Configuration**: Different environments can use different implementations
+- **No runtime surprises**: All possible errors are visible at compile time
+- **Testability**: Services can be easily mocked using Effect's built-in testing utilities
+- **Better debugging**: Detailed error traces and structured error handling
+- **Performance**: Lazy evaluation and efficient composition
+
+**Example:**
+```typescript
+// Service method with explicit error types
+getPost: (id: string) => Effect.Effect<Post, NotFoundError | DatabaseError>
+
+// In TRPC router - errors are automatically handled
+ctx.postService.getPost(id) // Returns Promise<Post>
+```
+
+For more details, see our [Effect.ts Backend Architecture documentation](./docs/effect-backend-architecture.md).
 
 ### Architecture Benefits Summary
 
@@ -88,13 +105,14 @@ Backend services use dependency injection for better testability and flexibility
 
 ## Tech Stack
 
-Built on the powerful T3 Stack:
+Built on the powerful T3 Stack with additional enterprise features:
 - [Next.js](https://nextjs.org) - Full-stack React framework
 - [NextAuth.js](https://next-auth.js.org) - Authentication
 - [Prisma](https://prisma.io) - Database ORM
 - [Tailwind CSS](https://tailwindcss.com) - Styling
 - [tRPC](https://trpc.io) - End-to-end type-safe APIs
 - [Zod](https://zod.dev) - Schema validation
+- [Effect.ts](https://effect.website) - Functional programming for type-safe backend services
 
 ## Getting Started
 
@@ -118,10 +136,17 @@ Built on the powerful T3 Stack:
 ```
 src/
 ├── types/          # Domain type definitions (single source of truth)
+│   ├── post.ts     # Post domain types and schemas
+│   ├── user.ts     # User domain types and schemas
+│   └── errors.ts   # Domain-specific error types
 ├── mappings/       # Database-to-domain type converters
-├── services/       # Backend business logic with dependency injection
+├── services/       # Effect.ts services with dependency injection
+│   ├── database/   # Database service layer
+│   └── post/       # Post service with Effect patterns
 ├── features/       # Frontend features (components, hooks, utils)
 ├── server/         # tRPC routers and API configuration
+│   └── api/        
+│       └── inject.ts # Service injection for TRPC context
 └── app/            # Next.js app directory
 ```
 
