@@ -7,7 +7,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { PostService } from "~/services";
+import { PostService } from "~/services/post";
 
 export const postRouter = createTRPCRouter({
   hello: publicProcedure
@@ -111,7 +111,7 @@ export const postRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const getPost = Effect.gen(function* () {
         const postService = yield* PostService;
-        
+
         return yield* postService.getPost(input.id);
       }).pipe(
         Effect.catchTags({

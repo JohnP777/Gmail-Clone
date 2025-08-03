@@ -1,7 +1,6 @@
 import { Layer, ManagedRuntime } from "effect";
 
-// import { Database } from "./database/service";
-import { PostService } from "./post/service";
+import { PostService } from "./post";
 
 /**
  * Main service layer that composes all application services
@@ -14,17 +13,6 @@ const MainLayer = Layer.mergeAll(PostService.Default);
  * This can be used to run Effects with all services available
  */
 export const ServiceRuntime = ManagedRuntime.make(MainLayer);
-
-/**
- * Export all service tags for use with TRPC
- */
-export { PostService } from "./post/service";
-export { Database } from "./database/service";
-
-/**
- * Export errors for external use
- */
-export * from "~/types/errors";
 
 /**
  * Test layer for unit testing

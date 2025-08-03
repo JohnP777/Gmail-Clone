@@ -6,7 +6,7 @@ import {
   PrismaPostToPost,
   PrismaPostWithUserToPostWithUser,
 } from "~/mappings/post";
-import { Database } from "~/services/database/service";
+import { Database } from "~/services/database";
 import { DatabaseError, NotFoundError, ValidationError } from "~/types/errors";
 
 /**
@@ -34,9 +34,6 @@ export type CreatePostInput = Schema.Schema.Type<typeof CreatePostInput>;
  * - Composability (can be combined with other services in layers)
  *
  * @example
- * // In TRPC router with effect-trpc-bridge
- * ctx.postService.createPost(input) // Returns Promise<Post>
- *
  * // In Effect programs
  * Effect.gen(function* () {
  *   const service = yield* PostService
