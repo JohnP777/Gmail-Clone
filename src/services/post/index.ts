@@ -41,6 +41,7 @@ export type CreatePostInput = Schema.Schema.Type<typeof CreatePostInput>;
  * })
  */
 export class PostService extends Effect.Service<PostService>()("PostService", {
+  dependencies: [Database.Default],
   effect: Effect.gen(function* () {
     const db = yield* Database;
 
@@ -157,7 +158,6 @@ export class PostService extends Effect.Service<PostService>()("PostService", {
         ),
     };
   }),
-  dependencies: [Database.Default],
   accessors: true,
 }) {}
 

@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import { env } from "~/env";
 
 export class Database extends Effect.Service<Database>()("Database", {
+  dependencies: [],
   scoped: Effect.gen(function* () {
     const prisma = yield* Effect.acquireRelease(
       Effect.sync(() => {
@@ -24,7 +25,6 @@ export class Database extends Effect.Service<Database>()("Database", {
 
     return prisma;
   }),
-  dependencies: [],
 }) {}
 
 /**
