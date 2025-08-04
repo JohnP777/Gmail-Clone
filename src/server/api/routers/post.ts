@@ -21,10 +21,8 @@ export const postRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({ name: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const createPost = Effect.gen(function* () {
-        const postService = yield* PostService;
-
-        return yield* postService.createPost({
+      const program = Effect.gen(function* () {
+        return yield* PostService.createPost({
           name: input.name,
           createdBy: {
             id: ctx.session.user.id,
@@ -51,14 +49,12 @@ export const postRouter = createTRPCRouter({
         })
       );
 
-      return ctx.runtime.runPromise(createPost);
+      return ctx.runtime.runPromise(program);
     }),
 
   latest: protectedProcedure.query(async ({ ctx }) => {
-    const latestPost = Effect.gen(function* () {
-      const postService = yield* PostService;
-
-      return yield* postService.getLatestPost();
+    const program = Effect.gen(function* () {
+      return yield* PostService.getLatestPost();
     }).pipe(
       Effect.catchTags({
         DatabaseError: () => {
@@ -77,14 +73,12 @@ export const postRouter = createTRPCRouter({
         },
       })
     );
-    return ctx.runtime.runPromise(latestPost);
+    return ctx.runtime.runPromise(program);
   }),
 
   all: protectedProcedure.query(async ({ ctx }) => {
-    const allPosts = Effect.gen(function* () {
-      const postService = yield* PostService;
-
-      return yield* postService.getAllPosts();
+    const program = Effect.gen(function* () {
+      return yield* PostService.getAllPosts();
     }).pipe(
       Effect.catchTags({
         DatabaseError: () => {
@@ -103,16 +97,14 @@ export const postRouter = createTRPCRouter({
         },
       })
     );
-    return ctx.runtime.runPromise(allPosts);
+    return ctx.runtime.runPromise(program);
   }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const getPost = Effect.gen(function* () {
-        const postService = yield* PostService;
-
-        return yield* postService.getPost(input.id);
+      const program = Effect.gen(function* () {
+        return yield* PostService.getPost(input.id);
       }).pipe(
         Effect.catchTags({
           DatabaseError: () => {
@@ -139,7 +131,7 @@ export const postRouter = createTRPCRouter({
         })
       );
 
-      return ctx.runtime.runPromise(getPost);
+      return ctx.runtime.runPromise(program);
     }),
 
   getSecretMessage: protectedProcedure.query(() => {

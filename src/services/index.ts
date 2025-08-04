@@ -1,12 +1,13 @@
 import { Layer, ManagedRuntime } from "effect";
 
+import { Database as DatabaseService } from "./database";
 import { PostService } from "./post";
 
 /**
  * Main service layer that composes all application services
  * This creates the dependency graph for the entire application
  */
-const MainLayer = Layer.mergeAll(PostService.Default);
+const MainLayer = Layer.mergeAll(PostService.Default, DatabaseService.Default);
 
 /**
  * Runtime for the application

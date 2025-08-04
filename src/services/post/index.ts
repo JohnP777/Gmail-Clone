@@ -157,7 +157,8 @@ export class PostService extends Effect.Service<PostService>()("PostService", {
         ),
     };
   }),
-  dependencies: [Database.Live],
+  dependencies: [Database.Default],
+  accessors: true,
 }) {}
 
 /**
