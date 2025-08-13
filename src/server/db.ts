@@ -1,49 +1,54 @@
 import console from "console";
+import { PrismaClient } from "@prisma/client";
 
-import { PrismaClientService } from "~/lib/prisma";
-
-import { ServiceRuntime } from "./api/inject";
+import { env } from "~/env";
 
 const globalForDb = globalThis as unknown as {
-  db: PrismaClientService | undefined;
-  runtime: typeof ServiceRuntime | undefined;
+  db: PrismaClient | undefined;
 };
 
 /**
- * The database instance is created by the ServiceRuntime
- * and is available in the server context
+ * The database instance is created directly as a PrismaClient
+ * for compatibility with NextAuth PrismaAdapter
  *
  * In development, Next.js may create multiple processes, so we use
  * a singleton pattern to ensure only one instance per process
  */
 if (!globalForDb.db) {
-  // Create a new runtime instance for this process
-  globalForDb.runtime = ServiceRuntime;
-  globalForDb.db = globalForDb.runtime.runSync(PrismaClientService);
+  // Create a new PrismaClient instance for this process
+  console.log(`[db.ts] Creating PrismaClient (PID: ${process.pid})`);
+  globalForDb.db = new PrismaClient({
+    log: env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  });
   console.log(`[db.ts] Database service initialized (PID: ${process.pid})`);
 
-  // Shared, idempotent runtime disposer
-  const disposeRuntime = async (reason: string) => {
+  // Shared, idempotent cleanup handler
+  const cleanupDatabase = async (reason: string) => {
     console.log(
-      `[db.ts] Disposing database due to ${reason} (PID: ${process.pid})`
+      `[db.ts] Disconnecting database due to ${reason} (PID: ${process.pid})`
     );
-    await globalForDb.runtime?.dispose();
-    console.log(`[db.ts] Database disposed successfully (PID: ${process.pid})`);
+    await globalForDb.db?.$disconnect();
+    console.log(`[db.ts] Database disconnected successfully (PID: ${process.pid})`);
   };
 
   if (process.env.NODE_ENV === "development") {
     process.once("beforeExit", () => {
       console.log(`[db.ts] Process beforeExit (PID: ${process.pid})`);
-      void disposeRuntime("beforeExit");
+      void cleanupDatabase("beforeExit");
     });
   } else {
     process.once("SIGTERM", () => {
-      void disposeRuntime("SIGTERM");
+      void cleanupDatabase("SIGTERM");
     });
     process.once("SIGINT", () => {
-      void disposeRuntime("SIGINT");
+      void cleanupDatabase("SIGINT");
     });
   }
+}
+
+// Ensure db is defined before export
+if (!globalForDb.db) {
+  throw new Error("Failed to initialize database connection");
 }
 
 export const db = globalForDb.db;
