@@ -1,10 +1,11 @@
-import type { User } from "~/types/user";
+import type { User } from "./schema";
 import { Schema } from "@effect/schema";
 import { Prisma } from "@prisma/client";
 import { Effect, pipe } from "effect";
 
 import { ValidationError } from "~/types/errors";
-import { UserSchema } from "~/types/user";
+
+import { UserSchema } from "./schema";
 
 export const UserQuery = Prisma.validator<Prisma.UserDefaultArgs>()({});
 

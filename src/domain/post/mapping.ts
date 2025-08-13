@@ -1,12 +1,12 @@
-import type { Post, PostWithUser } from "~/types/post";
+import type { Post, PostWithUser } from "./schema";
 import { Schema } from "@effect/schema";
 import { Prisma } from "@prisma/client";
 import { Effect, pipe } from "effect";
 
 import { ValidationError } from "~/types/errors";
-import { PostSchema, PostWithUserSchema } from "~/types/post";
 
-import { PrismaUserToUser, UserQuery } from "./user";
+import { PrismaUserToUser, UserQuery } from "../user/mapping";
+import { PostSchema, PostWithUserSchema } from "./schema";
 
 /**
  * Prisma query configuration for basic Post fetching

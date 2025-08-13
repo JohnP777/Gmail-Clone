@@ -2,12 +2,12 @@ import { TRPCError } from "@trpc/server";
 import { Effect } from "effect";
 import { z } from "zod";
 
+import { PostService } from "~/domain/post/service";
 import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { PostService } from "~/services/post";
 
 export const postRouter = createTRPCRouter({
   hello: publicProcedure

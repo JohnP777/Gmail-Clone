@@ -1,6 +1,6 @@
 import { Schema } from "@effect/schema";
 
-import { UserSchema } from "./user";
+import { UserSchema } from "../user/schema";
 
 /**
  * Post Schema using Effect's Schema

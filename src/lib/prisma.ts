@@ -3,29 +3,34 @@ import { Effect } from "effect";
 
 import { env } from "~/env";
 
-export class Database extends Effect.Service<Database>()("Database", {
-  dependencies: [],
-  scoped: Effect.gen(function* () {
-    const prisma = yield* Effect.acquireRelease(
-      Effect.sync(() => {
-        console.log(
-          `[Database] Creating new PrismaClient connection (PID: ${process.pid})`
-        );
-        return new PrismaClient({
-          log: env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-        });
-      }),
-      (client) =>
-        Effect.sync(() =>
+export class PrismaClientService extends Effect.Service<PrismaClientService>()(
+  "PrismaClientService",
+  {
+    dependencies: [],
+    scoped: Effect.gen(function* () {
+      const prisma = yield* Effect.acquireRelease(
+        Effect.sync(() => {
           console.log(
-            `[Database] Disconnecting PrismaClient (PID: ${process.pid})`
+            `[PrismaClientService] Creating new PrismaClient connection (PID: ${process.pid})`
+          );
+          return new PrismaClient({
+            log: env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+          });
+        }),
+        (client) =>
+          Effect.sync(() =>
+            console.log(
+              `[PrismaClientService] Disconnecting PrismaClient (PID: ${process.pid})`
+            )
+          ).pipe(
+            Effect.flatMap(() => Effect.promise(() => client.$disconnect()))
           )
-        ).pipe(Effect.flatMap(() => Effect.promise(() => client.$disconnect())))
-    );
+      );
 
-    return prisma;
-  }),
-}) {}
+      return prisma;
+    }),
+  }
+) {}
 
 /**
  * Database Service Tag

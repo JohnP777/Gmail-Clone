@@ -13,8 +13,17 @@
  * - Testing: Mock database and services
  * - Development: Debug-enabled services
  */
-import { ServiceRuntime } from "~/services";
+import { Layer, ManagedRuntime } from "effect";
 
+import { PostService } from "~/domain/post/service";
+import { PrismaClientService } from "~/lib/prisma";
+
+const MainLayer = Layer.mergeAll(
+  PostService.Default,
+  PrismaClientService.Default
+);
+
+export const ServiceRuntime = ManagedRuntime.make(MainLayer);
 /**
  * Injects services that require authentication
  * These services are available only in protected tRPC procedures

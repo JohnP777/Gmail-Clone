@@ -1,11 +1,11 @@
 import console from "console";
-import { type PrismaClient } from "@prisma/client";
 
-import { ServiceRuntime } from "~/services";
-import { Database } from "~/services/database";
+import { PrismaClientService } from "~/lib/prisma";
+
+import { ServiceRuntime } from "./api/inject";
 
 const globalForDb = globalThis as unknown as {
-  db: PrismaClient | undefined;
+  db: PrismaClientService | undefined;
   runtime: typeof ServiceRuntime | undefined;
 };
 
@@ -19,7 +19,7 @@ const globalForDb = globalThis as unknown as {
 if (!globalForDb.db) {
   // Create a new runtime instance for this process
   globalForDb.runtime = ServiceRuntime;
-  globalForDb.db = globalForDb.runtime.runSync(Database);
+  globalForDb.db = globalForDb.runtime.runSync(PrismaClientService);
   console.log(`[db.ts] Database service initialized (PID: ${process.pid})`);
 
   // Shared, idempotent runtime disposer
