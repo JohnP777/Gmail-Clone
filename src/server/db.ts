@@ -1,3 +1,4 @@
+import console from "console";
 import { type PrismaClient } from "@prisma/client";
 
 import { ServiceRuntime } from "~/services";
@@ -22,10 +23,7 @@ if (!globalForDb.db) {
   console.log(`[db.ts] Database service initialized (PID: ${process.pid})`);
 
   // Shared, idempotent runtime disposer
-  let disposed = false;
   const disposeRuntime = async (reason: string) => {
-    if (disposed) return;
-    disposed = true;
     console.log(
       `[db.ts] Disposing database due to ${reason} (PID: ${process.pid})`
     );
