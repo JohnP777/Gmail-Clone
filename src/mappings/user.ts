@@ -36,22 +36,6 @@ export const PrismaUserToUser = (
 };
 
 /**
- * Sync version for backward compatibility
- * Note: This will throw if validation fails
- */
-export const PrismaUserToUserSync = (
-  user: Prisma.UserGetPayload<typeof UserQuery>
-): User => {
-  return {
-    id: user.id,
-    name: user.name ?? "",
-    email: user.email ?? "",
-    image: user.image ?? "",
-    emailVerified: user.emailVerified ?? undefined,
-  };
-};
-
-/**
  * Maps domain User to Prisma create input
  */
 export const UserToPrismaCreate = (user: Omit<User, "id">) => ({

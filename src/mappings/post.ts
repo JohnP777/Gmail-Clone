@@ -6,7 +6,7 @@ import { Effect, pipe } from "effect";
 import { ValidationError } from "~/types/errors";
 import { PostSchema, PostWithUserSchema } from "~/types/post";
 
-import { PrismaUserToUser, PrismaUserToUserSync, UserQuery } from "./user";
+import { PrismaUserToUser, UserQuery } from "./user";
 
 /**
  * Prisma query configuration for basic Post fetching
@@ -49,21 +49,6 @@ export const PrismaPostToPost = (
 };
 
 /**
- * Sync version for backward compatibility
- * Note: This will throw if validation fails
- */
-export const PrismaPostToPostSync = (
-  post: Prisma.PostGetPayload<typeof PostQuery>
-): Post => {
-  return {
-    id: post.id,
-    name: post.name,
-    createdAt: post.createdAt,
-    updatedAt: post.updatedAt,
-  };
-};
-
-/**
  * Maps Prisma Post with relations to domain PostWithUser type using Effect
  * Demonstrates handling nested relations with validation
  */
@@ -92,19 +77,6 @@ export const PrismaPostWithUserToPostWithUser = (
       )
     )
   );
-};
-
-/**
- * Sync version for backward compatibility
- * Note: This will throw if validation fails
- */
-export const PrismaPostWithUserToPostWithUserSync = (
-  post: Prisma.PostGetPayload<typeof PostWithUserQuery>
-): PostWithUser => {
-  return {
-    ...PrismaPostToPostSync(post),
-    createdBy: PrismaUserToUserSync(post.createdBy),
-  };
 };
 
 /**

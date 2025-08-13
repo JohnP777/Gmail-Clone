@@ -68,7 +68,5 @@ export type UpdateUser = Schema.Schema.Type<typeof UpdateUserSchema>;
 /**
  * Utility functions for validation and parsing
  */
-export const parseUser = Schema.decodeUnknownSync(UserSchema);
-export const parseUserSafe = Schema.decodeUnknown(UserSchema);
-export const encodeUser = Schema.encodeSync(UserSchema);
-export const encodeUserSafe = Schema.encode(UserSchema);
+export const decodeUser = Schema.decodeUnknown(UserSchema);
+export const encodeUser = Schema.encode(UserSchema);
