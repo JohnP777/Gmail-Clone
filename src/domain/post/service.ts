@@ -1,8 +1,8 @@
 import { Schema } from "@effect/schema";
 import { Effect, pipe } from "effect";
 
+import { DatabaseError, NotFoundError, ValidationError } from "~/domain/errors";
 import { PrismaClientService } from "~/lib/prisma";
-import { DatabaseError, NotFoundError, ValidationError } from "~/types/errors";
 
 import { PrismaPostToPost, PrismaPostWithUserToPostWithUser } from "./mapping";
 import { PostWithUserQuery } from "./query";
