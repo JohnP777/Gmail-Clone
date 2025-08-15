@@ -4,11 +4,8 @@ import { Effect, pipe } from "effect";
 import { PrismaClientService } from "~/lib/prisma";
 import { DatabaseError, NotFoundError, ValidationError } from "~/types/errors";
 
-import {
-  PostWithUserQuery,
-  PrismaPostToPost,
-  PrismaPostWithUserToPostWithUser,
-} from "./mapping";
+import { PrismaPostToPost, PrismaPostWithUserToPostWithUser } from "./mapping";
+import { PostWithUserQuery } from "./query";
 
 /**
  * Input schema for creating posts using Effect Schema
