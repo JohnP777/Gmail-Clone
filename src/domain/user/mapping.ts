@@ -1,13 +1,12 @@
+import type { UserQuery } from "../user/query";
 import type { User } from "./schema";
+import type { Prisma } from "@prisma/client";
 import { Schema } from "@effect/schema";
-import { Prisma } from "@prisma/client";
 import { Effect, pipe } from "effect";
 
 import { ValidationError } from "~/types/errors";
 
 import { UserSchema } from "./schema";
-
-export const UserQuery = Prisma.validator<Prisma.UserDefaultArgs>()({});
 
 /**
  * Maps Prisma User to domain User type using Effect

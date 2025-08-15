@@ -1,26 +1,13 @@
+import type { PostQuery, PostWithUserQuery } from "./query";
 import type { Post, PostWithUser } from "./schema";
+import type { Prisma } from "@prisma/client";
 import { Schema } from "@effect/schema";
-import { Prisma } from "@prisma/client";
 import { Effect, pipe } from "effect";
 
 import { ValidationError } from "~/types/errors";
 
-import { PrismaUserToUser, UserQuery } from "../user/mapping";
+import { PrismaUserToUser } from "../user/mapping";
 import { PostSchema, PostWithUserSchema } from "./schema";
-
-/**
- * Prisma query configuration for basic Post fetching
- */
-export const PostQuery = Prisma.validator<Prisma.PostDefaultArgs>()({});
-
-/**
- * Prisma query configuration for Post with User relation
- */
-export const PostWithUserQuery = Prisma.validator<Prisma.PostDefaultArgs>()({
-  include: {
-    createdBy: UserQuery,
-  },
-});
 
 /**
  * Maps Prisma Post to domain Post type using Effect
