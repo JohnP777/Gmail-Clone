@@ -40,19 +40,19 @@ export async function HomePageContent() {
 
   if (!session) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4">
+      <div className="flex flex-col items-center justify-start gap-4 pt-8">
+        <Link
+          href={session ? "/api/auth/signout" : "/api/auth/signin"}
+          className="rounded-full bg-gradient-to-r from-[hsl(280,100%,70%)] to-[hsl(240,100%,70%)] px-8 py-3 font-semibold text-white no-underline transition-all duration-200 hover:scale-105 hover:shadow-lg relative z-[9999]"
+        >
+          {session ? "Sign out" : "Sign in"}
+        </Link>
+        
         <div className="text-center">
           <p className="text-xl text-gray-400">
             Sign in to create posts and see your content
           </p>
         </div>
-
-        <Link
-          href={session ? "/api/auth/signout" : "/api/auth/signin"}
-          className="rounded-full bg-gradient-to-r from-[hsl(280,100%,70%)] to-[hsl(240,100%,70%)] px-8 py-3 font-semibold text-white no-underline transition-all duration-200 hover:scale-105 hover:shadow-lg"
-        >
-          {session ? "Sign out" : "Sign in"}
-        </Link>
       </div>
     );
   }

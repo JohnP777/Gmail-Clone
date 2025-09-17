@@ -1,0 +1,17 @@
+"use client";
+
+import Image from "next/image";
+
+export default function Icon() {
+  return (
+    <button
+      type="button"
+      aria-label="Open app"
+      className="rounded-full p-2 hover:bg-gray-200/70 active:bg-gray-300 transition"
+    >
+      <Image src="/Logo.PNG" alt="App Icon" width={110} height={40} />
+    </button>
+  );
+}
+
+
