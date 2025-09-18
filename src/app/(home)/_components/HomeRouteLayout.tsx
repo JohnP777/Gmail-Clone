@@ -17,7 +17,7 @@ export default function HomeRouteLayout({
     <main className="min-h-screen bg-[#f9fafd] text-gray-900">
       <Header />
       <div className="pt-[56px]" />
-      <div className="mx-auto flex w-full max-w-[1600px] gap-4 px-4 md:px-6 py-4">
+      <div className="mx-auto flex w-full max-w-[1600px] gap-4 pr-4 md:pr-6 py-4">
         {/* Left Sidebar */}
         <LeftSidebar />
 
