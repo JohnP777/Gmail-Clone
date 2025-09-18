@@ -17,9 +17,11 @@ export default function HomeRouteLayout({
     <main className="min-h-screen bg-[#f9fafd] text-gray-900">
       <Header />
       <div className="pt-[56px]" />
-      <div className="mx-auto flex w-full max-w-[1600px] gap-4 pr-4 md:pr-6 py-4">
+      <div className="mx-auto flex w-full max-w-[1600px] gap-4 p-4 md:pr-6 py-4">
         {/* Left Sidebar */}
-        <LeftSidebar />
+        <div className="-ml-4">
+          <LeftSidebar />
+        </div>
 
         {/* Main center pane */}
         <div className="flex-1">
