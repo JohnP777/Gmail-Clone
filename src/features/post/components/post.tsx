@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 
-import { Input } from "~/features/shared/components/ui/input";
+// import { Input } from "~/features/shared/components/ui/input";
 import { useTRPC } from "~/trpc/react";
 import { type PostWithUser } from "~/types/post";
 
@@ -60,7 +60,7 @@ export function LatestPost() {
         className="space-y-3"
       >
         <div>
-          <Input
+          <input
             type="text"
             placeholder="What's on your mind?"
             value={name}
@@ -162,7 +162,7 @@ export function GetPost() {
         }}
         className="space-y-3"
       >
-        <Input
+        <input
           type="text"
           placeholder="Enter post ID"
           name="id"
