@@ -7,7 +7,7 @@ export default function Question() {
     <button
       type="button"
       aria-label="Help"
-      className="rounded-full p-2 hover:bg-gray-200/70 active:bg-gray-300 transition"
+      className="rounded-full p-2 hover:bg-gray-200/70 active:bg-gray-300 transition cursor-pointer"
     >
       <Image src="/Question.PNG" alt="Help" width={20} height={20} />
     </button>
