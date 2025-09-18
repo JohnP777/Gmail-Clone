@@ -16,7 +16,7 @@ export default function HomeRouteLayout({
   return (
     <main className="min-h-screen bg-[#f9fafd] text-gray-900">
       <Header />
-      <div className="pt-[56px]" />
+      <div className="pt-[52px]" />
       <div className="mx-auto flex w-full max-w-[1600px] gap-4 p-4 md:pr-6 py-4">
         {/* Left Sidebar */}
         <div className="-ml-4">
@@ -25,7 +25,7 @@ export default function HomeRouteLayout({
 
         {/* Main center pane */}
         <div className="flex-1">
-          <div className="rounded-2xl bg-white shadow-sm min-h-[88vh]">
+          <div className="rounded-2xl bg-white shadow-sm min-h-[90vh]">
             <div className="px-3 py-2 rounded-t-2xl">
               <InboxSectionHeader />
             </div>

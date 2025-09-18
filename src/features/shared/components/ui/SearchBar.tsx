@@ -14,7 +14,7 @@ export default function SearchBar() {
           "rounded-full",
           focused ? "bg-white" : "bg-[#e9eef6]",
           "px-3 md:px-4 py-2",
-          "w-full max-w-[740px]",
+          "w-full max-w-[720px]",
           "transition-colors",
           "h-12"
         ].join(" ")
