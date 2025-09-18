@@ -9,6 +9,7 @@ import InboxSectionTabs from "./InboxSectionTabs";
 import LeftSidebar from "~/features/shared/components/LeftSidebar";
 import RightSidebar from "~/features/shared/components/RightSidebar";
 import { auth } from "~/server/auth";
+import RecentEmailsList from "./RecentEmailsList";
 
 export default async function HomeRouteLayout({
   children,
@@ -56,6 +57,7 @@ export default async function HomeRouteLayout({
               <InboxSectionHeader />
             </div>
             <InboxSectionTabs />
+            <RecentEmailsList />
             {children}
           </div>
         </div>
