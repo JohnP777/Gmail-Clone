@@ -20,17 +20,10 @@
  */
 import Link from "next/link";
 
-import {
-  GetPost,
-  HelloMessage,
-  LatestPost,
-  Posts,
-} from "~/features/post/components/post";
-import PostErrorBoundary from "~/features/post/components/PostErrorBoundary";
-import { Await } from "~/features/shared/components/Await";
-import { LoadingSpinner } from "~/features/shared/components/LoadingSpinner";
+// import { Await } from "~/features/shared/components/Await";
+// import { LoadingSpinner } from "~/features/shared/components/LoadingSpinner";
 import { auth } from "~/server/auth";
-import { trpc } from "~/trpc/server";
+// import { trpc } from "~/trpc/server";
 
 export async function HomePageContent() {
   // This is to simulate auth loading time
