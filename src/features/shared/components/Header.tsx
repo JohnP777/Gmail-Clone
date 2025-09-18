@@ -21,7 +21,7 @@ export default function Header() {
           <SearchBar />
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 -mr-2">
           <Question />
           <Gear />
           <DotMenu />
