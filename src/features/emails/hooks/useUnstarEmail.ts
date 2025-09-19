@@ -23,7 +23,7 @@ export function useUnstarEmail() {
     mutationFn: unstarEmail,
     onSuccess: () => {
       // Invalidate and refetch recent emails after successful unstar
-      queryClient.invalidateQueries({ queryKey: ["gmail", "recent"] });
+      void queryClient.invalidateQueries({ queryKey: ["gmail", "recent"] });
     },
   });
 }

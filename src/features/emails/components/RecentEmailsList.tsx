@@ -12,9 +12,8 @@ import Starred from "~/features/emails/components/ui/Starred";
 
 function extractSenderName(from: string | null): string {
   if (!from) return "Unknown";
-  const match = from.match(/^\s*"?([^"<]+)"?\s*<.*>$/);
-  if (match && match[1]) return match[1].trim();
-  return from;
+  const match = /^\s*"?([^"<]+)"?\s*<.*>$/.exec(from);
+  return match?.[1]?.trim() ?? from;
 }
 
 export default function RecentEmailsList() {
@@ -59,7 +58,7 @@ export default function RecentEmailsList() {
   if (error) {
     return (
       <div className="px-4 py-3 text-sm text-red-600">
-        {(error as Error).message || "Failed to load emails"}
+        {error instanceof Error ? error.message : "Failed to load emails"}
       </div>
     );
   }

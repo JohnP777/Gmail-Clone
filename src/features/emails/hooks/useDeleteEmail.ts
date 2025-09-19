@@ -23,7 +23,7 @@ export function useDeleteEmail() {
     mutationFn: trashEmail,
     onSuccess: () => {
       // Invalidate and refetch recent emails after successful trash
-      queryClient.invalidateQueries({ queryKey: ["gmail", "recent"] });
+      void queryClient.invalidateQueries({ queryKey: ["gmail", "recent"] });
     },
   });
 }

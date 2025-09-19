@@ -3,6 +3,7 @@ import { google } from "googleapis";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 import { env } from "~/env";
+import { handleGmailError, getErrorMessage, getErrorStatus } from "~/lib/gmail-error-handler";
 
 async function getOAuthClientForUser(userId: string) {
   const account = await db.account.findFirst({
@@ -48,8 +49,8 @@ async function getOAuthClientForUser(userId: string) {
         },
       });
       oauth2.setCredentials(credentials);
-    } catch (e: any) {
-      const errMsg = e?.response?.data?.error || e?.message || "";
+    } catch (e: unknown) {
+      const errMsg = getErrorMessage(e);
       if (/invalid_grant/i.test(String(errMsg))) {
         await db.account.update({
           where: {
@@ -87,9 +88,9 @@ export async function GET() {
     async function listWithRetry() {
       try {
         return await gmail.users.messages.list({ userId: "me", maxResults: 15 });
-      } catch (e: any) {
-        const status = e?.response?.status || e?.status;
-        const msg = e?.response?.data?.error || e?.message || "";
+      } catch (e: unknown) {
+        const status = getErrorStatus(e);
+        const msg = getErrorMessage(e);
         const shouldRetry =
           (status === 401 || status === 403 || /invalid_token|insufficient/i.test(String(msg))) &&
           !!client.credentials.refresh_token;
@@ -136,12 +137,8 @@ export async function GET() {
     );
 
     return NextResponse.json({ messages });
-  } catch (err: any) {
-    if (err?.message === "RELINK_GOOGLE") {
-      return new NextResponse("Google access expired. Please re-connect Google.", { status: 409 });
-    }
-    const msg = err?.response?.data?.error?.message || err?.message || "Failed to fetch emails";
-    const status = err?.response?.status || err?.status || 500;
-    return new NextResponse(msg, { status });
+  } catch (err: unknown) {
+    const { message, status } = handleGmailError(err);
+    return new NextResponse(message, { status });
   }
 }

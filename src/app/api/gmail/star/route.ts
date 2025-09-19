@@ -3,6 +3,7 @@ import { google } from "googleapis";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 import { env } from "~/env";
+import { handleGmailError, getErrorMessage, getErrorStatus } from "~/lib/gmail-error-handler";
 
 async function getOAuthClientForUser(userId: string) {
   const account = await db.account.findFirst({
@@ -48,8 +49,8 @@ async function getOAuthClientForUser(userId: string) {
         },
       });
       oauth2.setCredentials(credentials);
-    } catch (e: any) {
-      const errMsg = e?.response?.data?.error || e?.message || "";
+    } catch (e: unknown) {
+      const errMsg = getErrorMessage(e);
       if (/invalid_grant/i.test(String(errMsg))) {
         await db.account.update({
           where: {
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await request.json() as { emailId?: string };
     const { emailId } = body;
 
     if (!emailId) {
@@ -100,9 +101,9 @@ export async function POST(request: Request) {
             addLabelIds: ["STARRED"],
           },
         });
-      } catch (e: any) {
-        const status = e?.response?.status || e?.status;
-        const msg = e?.response?.data?.error || e?.message || "";
+      } catch (e: unknown) {
+        const status = getErrorStatus(e);
+        const msg = getErrorMessage(e);
         const shouldRetry =
           (status === 401 || status === 403 || /invalid_token|insufficient/i.test(String(msg))) &&
           !!client.credentials.refresh_token;
@@ -126,12 +127,8 @@ export async function POST(request: Request) {
     await starWithRetry();
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    if (err?.message === "RELINK_GOOGLE") {
-      return new NextResponse("Google access expired. Please re-connect Google.", { status: 409 });
-    }
-    const msg = err?.response?.data?.error?.message || err?.message || "Failed to star email";
-    const status = err?.response?.status || err?.status || 500;
-    return new NextResponse(msg, { status });
+  } catch (err: unknown) {
+    const { message, status } = handleGmailError(err);
+    return new NextResponse(message, { status });
   }
 }

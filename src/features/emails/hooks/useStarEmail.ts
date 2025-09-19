@@ -23,7 +23,7 @@ export function useStarEmail() {
     mutationFn: starEmail,
     onSuccess: () => {
       // Invalidate and refetch recent emails after successful star
-      queryClient.invalidateQueries({ queryKey: ["gmail", "recent"] });
+      void queryClient.invalidateQueries({ queryKey: ["gmail", "recent"] });
     },
   });
 }

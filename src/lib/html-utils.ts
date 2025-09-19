@@ -40,6 +40,6 @@ export function decodeHtmlEntitiesSafe(html: string): string {
   };
   
   return html.replace(/&[a-zA-Z0-9#]+;/g, (entity) => {
-    return htmlEntities[entity] || entity;
+    return htmlEntities[entity] ?? entity;
   });
 }
