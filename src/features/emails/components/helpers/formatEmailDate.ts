@@ -18,10 +18,6 @@ export function formatEmailDate(dateInput: EmailDateInput): string {
 }
 
 function normalizeToDate(input: EmailDateInput): Date {
-  // Gmail API can provide:
-  // - internalDate: string milliseconds since epoch
-  // - payload.headers["Date"]: RFC2822/ISO string
-  // - Or already a Date/number
   if (input instanceof Date) return input;
 
   if (typeof input === "number") {

@@ -10,11 +10,11 @@ async function getOAuthClientForUser(userId: string) {
   });
   if (!account?.access_token) return null;
 
-  // MUST pass clientId + clientSecret so refresh works
+  // Pass clientId + clientSecret so refresh works
   const oauth2 = new google.auth.OAuth2(
     env.AUTH_GOOGLE_ID,
     env.AUTH_GOOGLE_SECRET,
-    // redirect URI not strictly required to refresh, but safe to keep
+    // Redirect URI not strictly required to refresh, but safe to keep
     "http://localhost:3000/api/auth/callback/google"
   );
 
@@ -125,6 +125,7 @@ export async function GET() {
           threadId: msg.data.threadId ?? null,
           snippet: msg.data.snippet ?? "",
           internalDate: msg.data.internalDate ?? null,
+          timeSent: msg.data.internalDate ?? null,
           from: h("From"),
           to: h("To"),
           subject: h("Subject"),

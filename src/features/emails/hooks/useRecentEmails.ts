@@ -5,6 +5,7 @@ export type RecentEmail = {
   threadId: string | null;
   snippet: string;
   internalDate: string | null;
+  timeSent: string | null;
   from: string | null;
   to: string | null;
   subject: string | null;

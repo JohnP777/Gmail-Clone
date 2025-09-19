@@ -3,6 +3,7 @@ import InboxButton from "./ui/InboxButton";
 import StarredButton from "./ui/StarredButton";
 import SentButton from "./ui/SentButton";
 import DraftsButton from "./ui/DraftsButton";
+import TrashButton from "./ui/TrashButton";
 
 export default function LeftSidebar() {
   return (
@@ -17,6 +18,7 @@ export default function LeftSidebar() {
         <StarredButton />
         <SentButton />
         <DraftsButton />
+        <TrashButton />
       </div>
     </aside>
   );

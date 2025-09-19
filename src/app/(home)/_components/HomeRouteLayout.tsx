@@ -9,7 +9,7 @@ import InboxSectionTabs from "./InboxSectionTabs";
 import LeftSidebar from "~/features/shared/components/LeftSidebar";
 import RightSidebar from "~/features/shared/components/RightSidebar";
 import { auth } from "~/server/auth";
-import RecentEmailsList from "./RecentEmailsList";
+import RecentEmailsList from "../../../features/emails/components/RecentEmailsList";
 
 export default async function HomeRouteLayout({
   children,
