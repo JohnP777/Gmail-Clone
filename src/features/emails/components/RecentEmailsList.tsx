@@ -38,11 +38,17 @@ export default function RecentEmailsList() {
   };
 
 
-  const MAX_COMBINED_CHARS = 120; // Combined subject + message length
+  const MAX_COMBINED_CHARS = 125; // Combined subject + message length
+  const MAX_SENDER_CHARS = 25; // Max sender name characters
 
   const truncate = (text: string, max: number) => {
     if (!text) return "";
     return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+  };
+
+  const truncateWithDots = (text: string, max: number) => {
+    if (!text) return "";
+    return text.length > max ? `${text.slice(0, max - 3)}...` : text;
   };
 
   const formatSubjectAndSnippet = (subject: string | null, snippet: string) => {
@@ -68,49 +74,54 @@ export default function RecentEmailsList() {
 
   return (
     <ul className="divide-y divide-gray-100">
-      {items.map((m) => (
-        <li 
-          key={m.id} 
-          className="px-4 py-2 hover:bg-gray-50 transition-colors"
-          onMouseEnter={() => setHoveredEmailId(m.id)}
-          onMouseLeave={() => setHoveredEmailId(null)}
-        >
-          <div className="flex items-center gap-3 pl-2">
-            {/* Checkbox, Star, Sender Name */}
-            <div className="flex items-center gap-2 w-56 shrink-0">
-              <input
-                type="checkbox"
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <Starred
-                isStarred={m.labelIds.includes("STARRED")}
-                onClick={() => toggleStar(m.id, m.labelIds.includes("STARRED"))}
-              />
-              <span className="text-[14px] text-gray-800 truncate">
-                {extractSenderName(m.from)}
-              </span>
-            </div>
+      {items.map((m) => {
+        const isUnread = m.labelIds.includes("UNREAD");
+        const isRead = !isUnread;
+        
+        return (
+          <li 
+            key={m.id} 
+            className={`px-4 py-2 hover:bg-gray-50 transition-colors ${isRead ? 'bg-[#f2f6fc]' : ''}`}
+            onMouseEnter={() => setHoveredEmailId(m.id)}
+            onMouseLeave={() => setHoveredEmailId(null)}
+          >
+            <div className="flex items-center gap-3 pl-2">
+              {/* Checkbox, Star, Sender Name */}
+              <div className="flex items-center gap-2 w-56 shrink-0">
+                <input
+                  type="checkbox"
+                  className={`w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${isRead ? 'bg-[#f2f6fc]' : ''}`}
+                />
+                <Starred
+                  isStarred={m.labelIds.includes("STARRED")}
+                  onClick={() => toggleStar(m.id, m.labelIds.includes("STARRED"))}
+                />
+                <span className={`text-[14px] text-gray-800 truncate ${isUnread ? 'font-semibold' : ''}`}>
+                  {truncateWithDots(extractSenderName(m.from), MAX_SENDER_CHARS)}
+                </span>
+              </div>
 
-            {/* Subject + Message */}
-            <div className="flex-1 min-w-0 px-4">
-              <div className="text-[13.5px] text-gray-800 truncate">
-                {formatSubjectAndSnippet(m.subject, m.snippet)}
+              {/* Subject + Message */}
+              <div className="flex-1 min-w-0 px-4">
+                <div className={`text-[13.5px] text-gray-800 truncate ${isUnread ? 'font-semibold' : ''}`}>
+                  {formatSubjectAndSnippet(m.subject, m.snippet)}
+                </div>
+              </div>
+
+              {/* Time or Delete Button */}
+              <div className="shrink-0 -my-1">
+                {hoveredEmailId === m.id ? (
+                  <DeleteButton onClick={() => handleDelete(m.id)} />
+                ) : (
+                  <div className={`text-[12px] text-black ${isUnread ? 'font-semibold' : ''}`}>
+                    {m.timeSent ? formatEmailDate(m.timeSent) : ""}
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Time or Delete Button */}
-            <div className="shrink-0 -my-1">
-              {hoveredEmailId === m.id ? (
-                <DeleteButton onClick={() => handleDelete(m.id)} />
-              ) : (
-                <div className="text-[12px] text-black font-semibold">
-                  {m.timeSent ? formatEmailDate(m.timeSent) : ""}
-                </div>
-              )}
-            </div>
-          </div>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }
