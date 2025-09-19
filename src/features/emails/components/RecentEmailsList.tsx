@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRecentEmails } from "~/features/emails/hooks/useRecentEmails";
+import { useDeleteEmail } from "~/features/emails/hooks/useDeleteEmail";
 import { formatEmailDate } from "~/features/emails/components/helpers/formatEmailDate";
 import { decodeHtmlEntitiesSafe } from "~/lib/html-utils";
 import DeleteButton from "~/features/emails/components/ui/DeleteButton";
@@ -15,6 +16,7 @@ function extractSenderName(from: string | null): string {
 
 export default function RecentEmailsList() {
   const { data, isLoading, error } = useRecentEmails();
+  const deleteEmailMutation = useDeleteEmail();
   const [starredEmails, setStarredEmails] = useState<Set<string>>(new Set());
   const [hoveredEmailId, setHoveredEmailId] = useState<string | null>(null);
 
@@ -33,8 +35,7 @@ export default function RecentEmailsList() {
   };
 
   const handleDelete = (emailId: string) => {
-    // TODO: Implement delete functionality
-    console.log("Delete email:", emailId);
+    deleteEmailMutation.mutate(emailId);
   };
 
 
