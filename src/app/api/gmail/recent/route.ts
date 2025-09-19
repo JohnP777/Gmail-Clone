@@ -4,6 +4,8 @@ import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 import { env } from "~/env";
 import { handleGmailError, getErrorMessage, getErrorStatus } from "~/lib/gmail-error-handler";
+import { getGmailCategoryLabel } from "~/lib/gmail-label-mapping";
+import { Label } from "~/types/label";
 
 async function getOAuthClientForUser(userId: string) {
   const account = await db.account.findFirst({
@@ -70,12 +72,18 @@ async function getOAuthClientForUser(userId: string) {
   return oauth2;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    // Get label from query parameters
+    const { searchParams } = new URL(request.url);
+    const labelParam = searchParams.get("label") as Label | null;
+    const label = labelParam || Label.PRIMARY; // Default to PRIMARY if no label specified
+    const gmailCategoryLabel = getGmailCategoryLabel(label);
 
     const oauth2 = await getOAuthClientForUser(session.user.id);
     if (!oauth2) {
@@ -87,7 +95,11 @@ export async function GET() {
 
     async function listWithRetry() {
       try {
-        return await gmail.users.messages.list({ userId: "me", maxResults: 15 });
+        return await gmail.users.messages.list({ 
+          userId: "me", 
+          maxResults: 15,
+          labelIds: [gmailCategoryLabel]
+        });
       } catch (e: unknown) {
         const status = getErrorStatus(e);
         const msg = getErrorMessage(e);
@@ -99,7 +111,11 @@ export async function GET() {
           const { credentials } = await client.refreshAccessToken();
           client.setCredentials(credentials);
           // optionally persist credentials here
-          return await gmail.users.messages.list({ userId: "me", maxResults: 15 });
+          return await gmail.users.messages.list({ 
+            userId: "me", 
+            maxResults: 15,
+            labelIds: [gmailCategoryLabel]
+          });
         }
         throw e;
       }

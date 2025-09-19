@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLabel } from "~/contexts/LabelContext";
+import { Label } from "~/types/label";
 
 export type RecentEmail = {
   id: string;
@@ -13,8 +15,11 @@ export type RecentEmail = {
   labelIds: string[];
 };
 
-async function fetchRecentEmails(): Promise<RecentEmail[]> {
-  const res = await fetch("/api/gmail/recent", { credentials: "include" });
+async function fetchRecentEmails(label: Label): Promise<RecentEmail[]> {
+  const url = new URL("/api/gmail/recent", window.location.origin);
+  url.searchParams.set("label", label);
+  
+  const res = await fetch(url.toString(), { credentials: "include" });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || "Failed to fetch emails");
@@ -24,9 +29,11 @@ async function fetchRecentEmails(): Promise<RecentEmail[]> {
 }
 
 export function useRecentEmails() {
+  const { currentLabel } = useLabel();
+  
   return useQuery({
-    queryKey: ["gmail", "recent"],
-    queryFn: fetchRecentEmails,
+    queryKey: ["gmail", "recent", currentLabel],
+    queryFn: () => fetchRecentEmails(currentLabel),
     staleTime: 60_000,
   });
 }
