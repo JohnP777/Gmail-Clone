@@ -1,4 +1,4 @@
-export type EmailDateInput = string | number | Date;
+import type { EmailDateInput } from "~/types/email";
 
 export function formatEmailDate(dateInput: EmailDateInput): string {
   const date = normalizeToDate(dateInput);

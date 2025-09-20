@@ -1,6 +1,7 @@
 "use client";
 
 import type { FallbackProps } from "react-error-boundary";
+import type { ReactElement, ReactNode } from "react";
 import React from "react";
 import { isTRPCClientError } from "@trpc/client";
 import Link from "next/link";
@@ -10,7 +11,7 @@ import ReusableErrorBoundary from "~/features/shared/components/ReusableErrorBou
 export default function PostErrorBoundary({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <ReusableErrorBoundary FallbackComponent={PostErrorMessage}>
@@ -22,7 +23,7 @@ export default function PostErrorBoundary({
 function PostErrorMessage({
   error,
   resetErrorBoundary,
-}: FallbackProps): React.ReactElement {
+}: FallbackProps): ReactElement {
   if (isTRPCClientError(error)) {
     // Since nextjs redacts the error message, we can need to throw TRPCError in the server with only code (NOT_FOUND, UNAUTHORIZED, INTERNAL_SERVER_ERROR),
     // then use the error.message to determine the error type in the fallback component

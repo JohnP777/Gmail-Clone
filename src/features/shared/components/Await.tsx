@@ -33,7 +33,7 @@
  * </Await>
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ReactNode } from "react";
+import type { ReactNode, ComponentType } from "react";
 import { Suspense } from "react";
 import { type TRPCQueryOptions } from "@trpc/tanstack-react-query";
 
@@ -45,8 +45,8 @@ type AwaitProps<T> =
       children: (data: T) => ReactNode;
       fallback: ReactNode;
       prefetch: ReturnType<TRPCQueryOptions<any>>[];
-      ErrorBoundaryComponent: React.ComponentType<{
-        children: React.ReactNode;
+      ErrorBoundaryComponent: ComponentType<{
+        children: ReactNode;
       }>;
     }
   | {
@@ -54,8 +54,8 @@ type AwaitProps<T> =
       children: ReactNode;
       fallback: ReactNode;
       prefetch: ReturnType<TRPCQueryOptions<any>>[];
-      ErrorBoundaryComponent: React.ComponentType<{
-        children: React.ReactNode;
+      ErrorBoundaryComponent: ComponentType<{
+        children: ReactNode;
       }>;
     };
 

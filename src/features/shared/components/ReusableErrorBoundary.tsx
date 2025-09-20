@@ -1,12 +1,12 @@
 "use client";
 
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import type { FallbackProps } from "react-error-boundary";
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 
 interface ReusableErrorBoundaryProps {
-  children: React.ReactNode;
+  children: ReactNode;
   FallbackComponent: ComponentType<FallbackProps>;
 }
 

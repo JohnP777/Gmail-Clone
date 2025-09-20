@@ -3,6 +3,7 @@
 // You can also define page specific layout components in the _components folder.
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import Header from "~/features/shared/components/Header";
 import InboxSectionHeader from "./InboxSectionHeader";
 import InboxSectionTabs from "./InboxSectionTabs";
@@ -14,7 +15,7 @@ import RecentEmailsList from "../../../features/emails/components/RecentEmailsLi
 export default async function HomeRouteLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const session = await auth();
 

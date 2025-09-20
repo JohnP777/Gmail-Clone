@@ -3,6 +3,7 @@ import "~/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
+import type { ReactNode } from "react";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { LabelProvider } from "~/contexts/LabelContext";
@@ -20,7 +21,7 @@ const geist = Geist({
 
 export default function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable}`}>
       <body>
