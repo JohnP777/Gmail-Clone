@@ -8,7 +8,7 @@ import AddonsButton from "./ui/AddonsButton";
 
 export default function RightSidebar() {
   return (
-    <aside className="w-[22px] shrink-0 mt-5">
+    <aside className="w-[22px] shrink-0 mt-5 -mr-1">
       <div className="space-y-10">
         <CalendarButton />
         <KeepButton />

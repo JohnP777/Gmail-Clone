@@ -45,7 +45,7 @@ export default async function HomeRouteLayout({
     <main className="min-h-screen bg-[#f9fafd] text-gray-900">
       <Header />
       <div className="pt-[52px]" />
-      <div className="mx-auto flex w-full max-w-[1600px] gap-4 p-4 md:pr-6 py-4">
+      <div className="mx-auto flex w-full gap-4 p-4 md:pr-6 py-4">
         {/* Left Sidebar */}
         <div className="-ml-4">
           <LeftSidebar />

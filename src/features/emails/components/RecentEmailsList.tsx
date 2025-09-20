@@ -38,7 +38,7 @@ export default function RecentEmailsList() {
   };
 
 
-  const MAX_COMBINED_CHARS = 125; // Combined subject + message length
+  const MAX_COMBINED_CHARS = 120; // Combined subject + message length
   const MAX_SENDER_CHARS = 25; // Max sender name characters
 
   const truncate = (text: string, max: number) => {
@@ -73,7 +73,7 @@ export default function RecentEmailsList() {
   }
 
   return (
-    <ul className="divide-y divide-gray-100">
+    <ul className="divide-y divide-gray-100 cursor-pointer">
       {items.map((m) => {
         const isUnread = m.labelIds.includes("UNREAD");
         const isRead = !isUnread;
@@ -90,11 +90,12 @@ export default function RecentEmailsList() {
               <div className="flex items-center gap-2 w-56 shrink-0">
                 <input
                   type="checkbox"
-                  className={`w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${isRead ? 'bg-[#f2f6fc]' : ''}`}
+                  className={`w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer ${isRead ? 'bg-[#f2f6fc]' : ''}`}
                 />
                 <Starred
                   isStarred={m.labelIds.includes("STARRED")}
                   onClick={() => toggleStar(m.id, m.labelIds.includes("STARRED"))}
+                  className="cursor-pointer rounded-full"
                 />
                 <span className={`text-[14px] text-gray-800 truncate ${isUnread ? 'font-semibold' : ''}`}>
                   {truncateWithDots(extractSenderName(m.from), MAX_SENDER_CHARS)}
@@ -111,7 +112,7 @@ export default function RecentEmailsList() {
               {/* Time or Delete Button */}
               <div className="shrink-0 -my-1">
                 {hoveredEmailId === m.id ? (
-                  <DeleteButton onClick={() => handleDelete(m.id)} />
+                  <DeleteButton onClick={() => handleDelete(m.id)} className="cursor-pointer" />
                 ) : (
                   <div className={`text-[12px] text-black ${isUnread ? 'font-semibold' : ''}`}>
                     {m.timeSent ? formatEmailDate(m.timeSent) : ""}
