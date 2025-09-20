@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLabel } from "~/contexts/LabelContext";
-import { Label } from "~/types/label";
+import type { Label } from "~/types/label";
 import type { Email } from "~/types/email";
 
 async function fetchRecentEmails(label: Label): Promise<Email[]> {

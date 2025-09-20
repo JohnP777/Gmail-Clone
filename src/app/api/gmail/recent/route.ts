@@ -82,7 +82,7 @@ export async function GET(request: Request) {
     // Get label from query parameters
     const { searchParams } = new URL(request.url);
     const labelParam = searchParams.get("label") as Label | null;
-    const label = labelParam || Label.PRIMARY; // Default to PRIMARY if no label specified
+    const label = labelParam ?? Label.PRIMARY; // Default to PRIMARY if no label specified
     const gmailCategoryLabel = getGmailCategoryLabel(label);
 
     const oauth2 = await getOAuthClientForUser(session.user.id);
