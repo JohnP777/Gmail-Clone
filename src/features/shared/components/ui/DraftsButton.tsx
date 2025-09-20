@@ -23,7 +23,7 @@ export default function DraftsButton() {
       onClick={() => setCurrentLabel(Label.DRAFTS)}
       className={buttonClasses}
     >
-      <Image src="/Drafts.PNG" alt="Drafts" width={14} height={14} />
+      <Image src="/Drafts.png" alt="Drafts" width={14} height={14} />
       <span className={textClasses}>Drafts</span>
     </button>
   );
